@@ -1,0 +1,12 @@
+/* Blend in with HN's own comhead links. */
+a.hncs-save {
+  color: #828282;
+  text-decoration: none;
+}
+a.hncs-save:hover {
+  text-decoration: underline;
+}
+a.hncs-save.hncs-saved {
+  color: #ff6600;
+  font-weight: bold;
+}

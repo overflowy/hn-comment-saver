@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "HN Comment Saver",
+  "version": "1.0.0",
+  "description": "Save Hacker News comments, tag them, and find them later with fuzzy search. Import/export included.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "hn-comment-saver@local",
+      "strict_min_version": "115.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+  "icons": {
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png"
+  },
+  "background": {
+    "scripts": ["db.js", "background.js"]
+  },
+  "action": {
+    "default_title": "Saved HN comments",
+    "default_icon": {
+      "48": "icons/toolbar-48.png",
+      "96": "icons/toolbar-96.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://news.ycombinator.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": ["downloads", "alarms", "storage"],
+  "host_permissions": ["*://news.ycombinator.com/*"]
+}
