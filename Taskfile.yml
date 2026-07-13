@@ -1,0 +1,16 @@
+# https://taskfile.dev
+
+version: "3"
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  package:
+    desc: Package the extension
+    cmds:
+      - mkdir -p dist
+      - zip -r dist/hn-comment-saver.zip * -x "*.DS_Store" -x ".git/*" -x ".gitignore"
+      - echo "Extension packaged to dist/hn-comment-saver.zip"
