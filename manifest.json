@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "HN Comment Saver",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Save Hacker News comments, tag them, and find them later with fuzzy search. Import/export included.",
   "browser_specific_settings": {
     "gecko": {
