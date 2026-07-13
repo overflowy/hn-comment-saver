@@ -4,7 +4,7 @@ A self-contained Firefox extension that saves Hacker News comments locally, lets
 
 <img width="2904" height="1592" alt="ext" src="https://github.com/user-attachments/assets/eaf83f61-cb98-4130-b5fa-e670bcaf3a3b" />
 
-https://github.com/user-attachments/assets/d2bfba2f-13f0-4c47-84d8-9660dcff4641
+https://github.com/user-attachments/assets/2a588aea-24e7-40c6-bdd6-e1c0fe73a655
 
 ## Install
 
