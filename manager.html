@@ -1,79 +1,136 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>HN Comment Saver</title>
-  <link rel="icon" type="image/png" href="icons/toolbar-48.png" />
-  <link rel="stylesheet" href="manager.css" />
-</head>
-<body>
-  <div id="page">
-    <!-- HN-style orange top bar -->
-    <table id="topbar" cellpadding="0" cellspacing="0"><tr>
-      <td id="logo"><span>S</span></td>
-      <td id="brand"><b>Saved Comments</b>
-        <span class="topnav">
-          <a href="#" id="btn-export">export</a> |
-          <a href="#" id="btn-import">import</a> |
-          <a href="#" id="btn-backups">backups</a> |
-          <a href="https://news.ycombinator.com" target="_blank" rel="noopener">hacker news</a>
-        </span>
-      </td>
-      <td id="count"><span id="stat-count">0</span> saved</td>
-    </tr></table>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HN Comment Saver</title>
+    <link rel="icon" type="image/png" href="icons/toolbar-48.png" />
+    <link rel="stylesheet" href="manager.css" />
+  </head>
+  <body>
+    <div id="page">
+      <!-- HN-style orange top bar -->
+      <table id="topbar" cellpadding="0" cellspacing="0">
+        <tr>
+          <td id="logo"><span>S</span></td>
+          <td id="brand">
+            <b>Saved Comments</b>
+            <span class="topnav">
+              <a href="#" id="btn-export">export</a> |
+              <a href="#" id="btn-import">import</a> |
+              <a href="#" id="btn-backups">backups</a> |
+              <a
+                href="https://news.ycombinator.com"
+                target="_blank"
+                rel="noopener"
+                >hacker news</a
+              >
+            </span>
+          </td>
+          <td id="count"><span id="stat-count">0</span> saved</td>
+        </tr>
+      </table>
 
-    <!-- Search row -->
-    <div id="searchbar">
-      <span id="q-wrap"><a href="#" id="help-toggle" title="Search syntax">?</a><input id="q" type="search" autocomplete="off" spellcheck="false"
-             placeholder="search…" autofocus /></span>
-      <span id="search-hint"></span>
-      <div id="help-panel" hidden>
-        <table>
-          <tr><td><code>words</code></td><td>match anywhere (comment, title, author, tags, notes) — prefixes and small typos count</td></tr>
-          <tr><td><code>"exact phrase"</code></td><td>verbatim text, case-insensitive</td></tr>
-          <tr><td><code>#tag</code> <code>tag:</code></td><td>filter by tag (prefix match)</td></tr>
-          <tr><td><code>by:</code> <code>author:</code></td><td>filter by author (prefix match)</td></tr>
-          <tr><td><code>thread:</code> <code>title:</code></td><td>search thread titles only</td></tr>
-          <tr><td><code>note:</code> <code>notes:</code></td><td>search your notes only</td></tr>
-          <tr><td><code>text:</code> <code>body:</code></td><td>search comment bodies only</td></tr>
-        </table>
-        <div class="help-foot">combine freely — every part must match, e.g. <code>#focus by:goodroot reading</code></div>
-      </div>
-      <div id="backup-panel" hidden>
-        <div><b>auto-backup</b> — daily, only when something changed, written to
-        <code>Downloads/hn-comment-saver/</code> as weekday slots
-        (<code>backup-mon.json</code> … <code>backup-sun.json</code>, each overwritten a week later).
-        Restore any of them with the import button.</div>
-        <div id="backup-status">…</div>
-        <div class="backup-ops">
-          <a href="#" id="backup-toggle">…</a> |
-          <a href="#" id="backup-now">backup now</a>
+      <!-- Search row -->
+      <div id="searchbar">
+        <span id="q-wrap"
+          ><a href="#" id="help-toggle" title="Search syntax">?</a
+          ><input
+            id="q"
+            type="search"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="search…"
+            autofocus
+        /></span>
+        <span id="search-hint"></span>
+        <div id="help-panel" hidden>
+          <table>
+            <tr>
+              <td><code>words</code></td>
+              <td>
+                match anywhere (comment, title, author, tags, notes) — prefixes
+                and small typos count
+              </td>
+            </tr>
+            <tr>
+              <td><code>"exact phrase"</code></td>
+              <td>verbatim text, case-insensitive</td>
+            </tr>
+            <tr>
+              <td><code>#tag</code> <code>tag:</code></td>
+              <td>filter by tag (prefix match)</td>
+            </tr>
+            <tr>
+              <td><code>by:</code> <code>author:</code></td>
+              <td>filter by author (prefix match)</td>
+            </tr>
+            <tr>
+              <td><code>thread:</code> <code>title:</code></td>
+              <td>search thread titles only</td>
+            </tr>
+            <tr>
+              <td><code>note:</code> <code>notes:</code></td>
+              <td>search your notes only</td>
+            </tr>
+            <tr>
+              <td><code>text:</code> <code>body:</code></td>
+              <td>search comment bodies only</td>
+            </tr>
+          </table>
+          <div class="help-foot">
+            combine freely — every part must match, e.g.
+            <code>#focus by:goodroot reading</code>
+          </div>
+        </div>
+        <div id="backup-panel" hidden>
+          <div>
+            <b>auto-backup</b> — daily, only when something changed, written to
+            <code>Downloads/hn-comment-saver/</code> as weekday slots (<code
+              >backup-mon.json</code
+            >
+            … <code>backup-sun.json</code>, each overwritten a week later).
+            Restore any of them with the import button.
+          </div>
+          <div id="backup-status">…</div>
+          <div class="backup-ops">
+            <a href="#" id="backup-toggle">…</a> |
+            <a href="#" id="backup-now">backup now</a>
+          </div>
         </div>
       </div>
+
+      <!-- Tag row -->
+      <div id="tagbar"></div>
+
+      <!-- Results -->
+      <div id="list"></div>
+
+      <div id="empty" hidden>
+        <p><b>Nothing saved yet.</b></p>
+        <p>
+          Browse
+          <a href="https://news.ycombinator.com" target="_blank" rel="noopener"
+            >Hacker News</a
+          >
+          and click the new <span class="fake-link">save</span> link in any
+          comment's header. Comments show up here, searchable and taggable.
+        </p>
+      </div>
+
+      <div id="footer"><span class="yc-line"></span></div>
     </div>
 
-    <!-- Tag row -->
-    <div id="tagbar"></div>
+    <input
+      type="file"
+      id="import-file"
+      accept=".json,application/json"
+      hidden
+    />
 
-    <!-- Results -->
-    <div id="list"></div>
-
-    <div id="empty" hidden>
-      <p><b>Nothing saved yet.</b></p>
-      <p>Browse <a href="https://news.ycombinator.com" target="_blank" rel="noopener">Hacker News</a>
-      and click the new <span class="fake-link">save</span> link in any comment's header.
-      Comments show up here, searchable and taggable.</p>
-    </div>
-
-    <div id="footer"><span class="yc-line"></span></div>
-  </div>
-
-  <input type="file" id="import-file" accept=".json,application/json" hidden />
-
-  <script src="db.js"></script>
-  <script src="vendor/minisearch.min.js"></script>
-  <script src="search.js"></script>
-  <script src="manager.js"></script>
-</body>
+    <script src="db.js"></script>
+    <script src="vendor/minisearch.min.js"></script>
+    <script src="search.js"></script>
+    <script src="manager.js"></script>
+  </body>
 </html>

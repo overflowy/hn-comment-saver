@@ -63,26 +63,32 @@ const hncsDB = (() => {
           const t = db.transaction(HNCS_STORE, mode);
           const store = t.objectStore(HNCS_STORE);
           const out = fn(store);
-          t.oncomplete = () => resolve(out && out.result !== undefined ? out.result : out);
+          t.oncomplete = () =>
+            resolve(out && out.result !== undefined ? out.result : out);
           t.onerror = () => reject(t.error);
           t.onabort = () => reject(t.error);
-        })
+        }),
     );
   }
 
   // ---- compression helpers -------------------------------------------------
 
   const canCompress =
-    typeof CompressionStream !== "undefined" && typeof DecompressionStream !== "undefined";
+    typeof CompressionStream !== "undefined" &&
+    typeof DecompressionStream !== "undefined";
 
   async function gzip(str) {
     if (!canCompress) return null;
-    const stream = new Blob([str]).stream().pipeThrough(new CompressionStream("gzip"));
+    const stream = new Blob([str])
+      .stream()
+      .pipeThrough(new CompressionStream("gzip"));
     return await new Response(stream).arrayBuffer();
   }
 
   async function gunzip(buf) {
-    const stream = new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"));
+    const stream = new Blob([buf])
+      .stream()
+      .pipeThrough(new DecompressionStream("gzip"));
     return await new Response(stream).text();
   }
 
@@ -230,7 +236,7 @@ const hncsDB = (() => {
         const curNotes = Array.isArray(cur.notes) ? cur.notes : [];
         const seen = new Set(curNotes.map((n) => n && n.id));
         const newNotes = (Array.isArray(raw.notes) ? raw.notes : []).filter(
-          (n) => n && n.id && n.quote != null && !seen.has(n.id)
+          (n) => n && n.id && n.quote != null && !seen.has(n.id),
         );
         const tagsChanged = union.length !== (cur.tags || []).length;
         if (tagsChanged || newNotes.length) {
@@ -253,10 +259,14 @@ const hncsDB = (() => {
         threadId: raw.threadId || null,
         threadTitle: raw.threadTitle || "",
         threadUrl: raw.threadUrl || "",
-        commentUrl: raw.commentUrl || (raw.id ? "https://news.ycombinator.com/item?id=" + raw.id : ""),
+        commentUrl:
+          raw.commentUrl ||
+          (raw.id ? "https://news.ycombinator.com/item?id=" + raw.id : ""),
         parentId: raw.parentId || null,
         tags: normalizeTags(raw.tags),
-        notes: Array.isArray(raw.notes) ? raw.notes.filter((n) => n && n.id && n.quote != null) : [],
+        notes: Array.isArray(raw.notes)
+          ? raw.notes.filter((n) => n && n.id && n.quote != null)
+          : [],
         savedAt: raw.savedAt || Date.now(),
       });
       existingIds.add(raw.id);

@@ -18,14 +18,17 @@
   // HN's HTML is already tame, but never trust stored markup blindly.
   function sanitize(html) {
     const doc = new DOMParser().parseFromString(html || "", "text/html");
-    doc.querySelectorAll("script, style, iframe, object, embed, link, meta").forEach((n) =>
-      n.remove()
-    );
+    doc
+      .querySelectorAll("script, style, iframe, object, embed, link, meta")
+      .forEach((n) => n.remove());
     for (const el of doc.body.querySelectorAll("*")) {
       for (const attr of [...el.attributes]) {
         const name = attr.name.toLowerCase();
         if (name.startsWith("on")) el.removeAttribute(attr.name);
-        if ((name === "href" || name === "src") && /^\s*javascript:/i.test(attr.value)) {
+        if (
+          (name === "href" || name === "src") &&
+          /^\s*javascript:/i.test(attr.value)
+        ) {
           el.removeAttribute(attr.name);
         }
       }
@@ -70,7 +73,8 @@
       let m;
       re.lastIndex = 0;
       while ((m = re.exec(str))) {
-        if (m.index > last) frag.appendChild(document.createTextNode(str.slice(last, m.index)));
+        if (m.index > last)
+          frag.appendChild(document.createTextNode(str.slice(last, m.index)));
         const mark = document.createElement("mark");
         mark.className = "hl";
         mark.textContent = m[0];
@@ -78,7 +82,8 @@
         last = m.index + m[0].length;
         if (m[0].length === 0) re.lastIndex++; // safety against zero-width loops
       }
-      if (last < str.length) frag.appendChild(document.createTextNode(str.slice(last)));
+      if (last < str.length)
+        frag.appendChild(document.createTextNode(str.slice(last)));
       node.parentNode.replaceChild(frag, node);
     }
   }
@@ -102,7 +107,8 @@
     }
     if (note.prefix) {
       const i = bodyText.indexOf(note.prefix + q);
-      if (i !== -1) return [i + note.prefix.length, i + note.prefix.length + q.length];
+      if (i !== -1)
+        return [i + note.prefix.length, i + note.prefix.length + q.length];
     }
     const i = bodyText.indexOf(q);
     if (i !== -1) return [i, i + q.length];
@@ -188,7 +194,8 @@
       const quote = document.createElement("span");
       quote.className = "note-quote";
       const q = note.quote || "";
-      quote.textContent = "\u201C" + (q.length > 90 ? q.slice(0, 90) + "\u2026" : q) + "\u201D";
+      quote.textContent =
+        "\u201C" + (q.length > 90 ? q.slice(0, 90) + "\u2026" : q) + "\u201D";
       quote.title = q;
 
       const text = document.createElement("span");
@@ -327,7 +334,9 @@
       rec.notes = [
         ...(rec.notes || []),
         {
-          id: (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()) + Math.random().toString(36).slice(2),
+          id:
+            (crypto.randomUUID && crypto.randomUUID()) ||
+            String(Date.now()) + Math.random().toString(36).slice(2),
           quote,
           prefix,
           start,
@@ -352,8 +361,11 @@
 
   function renderTagbar() {
     const counts = new Map();
-    for (const rec of all) for (const t of rec.tags || []) counts.set(t, (counts.get(t) || 0) + 1);
-    const tags = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    for (const rec of all)
+      for (const t of rec.tags || []) counts.set(t, (counts.get(t) || 0) + 1);
+    const tags = [...counts.entries()].sort(
+      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+    );
 
     tagbarEl.textContent = "";
     if (!tags.length) return;
@@ -412,20 +424,31 @@
     });
     head.appendChild(toggle);
 
-    const user = comheadLink(rec.author || "unknown", "https://news.ycombinator.com/user?id=" + encodeURIComponent(rec.author || ""));
+    const user = comheadLink(
+      rec.author || "unknown",
+      "https://news.ycombinator.com/user?id=" +
+        encodeURIComponent(rec.author || ""),
+    );
     user.className = "hnuser";
     head.appendChild(user);
     head.append(" ");
 
-    head.appendChild(comheadLink(rec.ageText || fmtDate(rec.savedAt), rec.commentUrl));
+    head.appendChild(
+      comheadLink(rec.ageText || fmtDate(rec.savedAt), rec.commentUrl),
+    );
     if (rec.parentId) {
       head.append(" | ");
       head.appendChild(
-        comheadLink("parent", "https://news.ycombinator.com/item?id=" + rec.parentId)
+        comheadLink(
+          "parent",
+          "https://news.ycombinator.com/item?id=" + rec.parentId,
+        ),
       );
     }
     head.append(" | on: ");
-    head.appendChild(comheadLink(rec.threadTitle || "(thread)", rec.threadUrl, "storyline"));
+    head.appendChild(
+      comheadLink(rec.threadTitle || "(thread)", rec.threadUrl, "storyline"),
+    );
     head.append(" | saved " + fmtDate(rec.savedAt) + " | ");
 
     // tags inline
@@ -556,7 +579,9 @@
 
     let results;
     if (q.trim()) {
-      results = hncsSearch.search(q, all).map((r) => ({ record: r.record, hl: r.highlight }));
+      results = hncsSearch
+        .search(q, all)
+        .map((r) => ({ record: r.record, hl: r.highlight }));
     } else {
       results = [...all]
         .sort((a, b) => b.savedAt - a.savedAt)
@@ -564,11 +589,14 @@
     }
     if (activeTags.size) {
       results = results.filter((r) =>
-        [...activeTags].every((t) => (r.record.tags || []).includes(t))
+        [...activeTags].every((t) => (r.record.tags || []).includes(t)),
       );
     }
 
-    hintEl.textContent = q.trim() || activeTags.size ? results.length + " match" + (results.length === 1 ? "" : "es") : "";
+    hintEl.textContent =
+      q.trim() || activeTags.size
+        ? results.length + " match" + (results.length === 1 ? "" : "es")
+        : "";
     renderTagbar();
 
     listEl.textContent = "";
@@ -579,7 +607,7 @@
     for (let i = 0; i < results.length; i += BATCH) {
       if (seq !== renderSeq) return; // superseded by a newer refresh
       const items = await Promise.all(
-        results.slice(i, i + BATCH).map((r) => renderItem(r.record, r.hl))
+        results.slice(i, i + BATCH).map((r) => renderItem(r.record, r.hl)),
       );
       if (seq !== renderSeq) return;
       items.forEach((el) => listEl.appendChild(el));
@@ -610,11 +638,14 @@
       count: comments.length,
       comments,
     };
-    const blob = new Blob([JSON.stringify(payload, null, 1)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(payload, null, 1)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "hn-saved-comments-" + new Date().toISOString().slice(0, 10) + ".json";
+    a.download =
+      "hn-saved-comments-" + new Date().toISOString().slice(0, 10) + ".json";
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -637,7 +668,9 @@
       if (!Array.isArray(records)) throw new Error("no comments array found");
       const res = await hncsDB.importAll(records);
       await load();
-      toast(`imported: ${res.added} new, ${res.merged} tag-merged, ${res.skipped} skipped`);
+      toast(
+        `imported: ${res.added} new, ${res.merged} tag-merged, ${res.skipped} skipped`,
+      );
     } catch (err) {
       toast("import failed: " + err.message);
     }
@@ -703,7 +736,8 @@
     new Promise((resolve) => {
       try {
         const p = api.runtime.sendMessage(msg, (r) => resolve(r));
-        if (p && typeof p.then === "function") p.then(resolve).catch(() => resolve(null));
+        if (p && typeof p.then === "function")
+          p.then(resolve).catch(() => resolve(null));
       } catch {
         resolve(null);
       }
@@ -719,8 +753,9 @@
     bits.push("auto-backup: " + (s.enabled ? "on" : "off"));
     if (s.lastBackupAt) {
       bits.push(
-        "last: " + new Date(s.lastBackupAt).toLocaleString() +
-        (s.lastBackupFile ? " \u2192 " + s.lastBackupFile : "")
+        "last: " +
+          new Date(s.lastBackupAt).toLocaleString() +
+          (s.lastBackupFile ? " \u2192 " + s.lastBackupFile : ""),
       );
     } else {
       bits.push("last: never");
@@ -765,7 +800,8 @@
     if (r && r.ok) {
       await refreshStatus();
     } else {
-      statusEl.textContent = "backup failed: " + ((r && r.error) || "unknown error");
+      statusEl.textContent =
+        "backup failed: " + ((r && r.error) || "unknown error");
       statusEl.className = "err";
     }
   });

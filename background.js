@@ -66,7 +66,7 @@ async function runBackup(slot) {
   const name = slot || "backup-" + DAY_SLOTS[new Date().getDay()];
   const filename = "hn-comment-saver/" + name + ".json";
   const url = URL.createObjectURL(
-    new Blob([JSON.stringify(payload, null, 1)], { type: "application/json" })
+    new Blob([JSON.stringify(payload, null, 1)], { type: "application/json" }),
   );
   try {
     const id = await api.downloads.download({
@@ -94,7 +94,10 @@ async function runBackup(slot) {
 api.downloads.onChanged.addListener((delta) => {
   const url = pendingRevoke.get(delta.id);
   if (!url || !delta.state) return;
-  if (delta.state.current === "complete" || delta.state.current === "interrupted") {
+  if (
+    delta.state.current === "complete" ||
+    delta.state.current === "interrupted"
+  ) {
     URL.revokeObjectURL(url);
     pendingRevoke.delete(delta.id);
   }
@@ -166,7 +169,10 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           sendResponse({ ok: false, error: "unknown message type" });
       }
     } catch (e) {
-      sendResponse({ ok: false, error: String(e && e.message ? e.message : e) });
+      sendResponse({
+        ok: false,
+        error: String(e && e.message ? e.message : e),
+      });
     }
   })();
   return true; // keep the channel open for the async response

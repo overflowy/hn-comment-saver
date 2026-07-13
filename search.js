@@ -42,7 +42,9 @@ const hncsSearch = (() => {
       threadTitle: rec.threadTitle || "",
       author: rec.author || "",
       tags: (rec.tags || []).join(" "),
-      notes: (rec.notes || []).map((n) => (n.note || "") + " " + (n.quote || "")).join(" "),
+      notes: (rec.notes || [])
+        .map((n) => (n.note || "") + " " + (n.quote || ""))
+        .join(" "),
     };
   }
 
@@ -64,11 +66,18 @@ const hncsSearch = (() => {
   // ---- query parsing ---------------------------------------------------------
 
   const MODE_ALIASES = {
-    tag: "tags", tags: "tags",
-    by: "authors", author: "authors", user: "authors",
-    thread: "titleTerms", title: "titleTerms",
-    note: "noteTerms", notes: "noteTerms",
-    text: "textTerms", body: "textTerms", comment: "textTerms",
+    tag: "tags",
+    tags: "tags",
+    by: "authors",
+    author: "authors",
+    user: "authors",
+    thread: "titleTerms",
+    title: "titleTerms",
+    note: "noteTerms",
+    notes: "noteTerms",
+    text: "textTerms",
+    body: "textTerms",
+    comment: "textTerms",
   };
   const MODE_RE = /^([a-z]+):(.+)$/;
 
@@ -81,7 +90,15 @@ const hncsSearch = (() => {
       return " ";
     });
 
-    const out = { phrases, tags: [], authors: [], titleTerms: [], noteTerms: [], textTerms: [], terms: [] };
+    const out = {
+      phrases,
+      tags: [],
+      authors: [],
+      titleTerms: [],
+      noteTerms: [],
+      textTerms: [],
+      terms: [],
+    };
     for (const t of q.trim().toLowerCase().split(/\s+/).filter(Boolean)) {
       if (t.startsWith("#") && t.length > 1) {
         out.tags.push(t.slice(1));
@@ -131,7 +148,8 @@ const hncsSearch = (() => {
   }
 
   function search(query, records) {
-    const { phrases, tags, authors, titleTerms, noteTerms, textTerms, terms } = parseQuery(query);
+    const { phrases, tags, authors, titleTerms, noteTerms, textTerms, terms } =
+      parseQuery(query);
     const byId = new Map(records.map((r) => [r.id, r]));
 
     let hits = null; // null = no token search ran yet
@@ -154,10 +172,18 @@ const hncsSearch = (() => {
     let candidates;
     if (hits !== null) {
       candidates = [...hits.entries()]
-        .map(([id, h]) => ({ record: byId.get(id), score: h.score, byField: h.byField }))
+        .map(([id, h]) => ({
+          record: byId.get(id),
+          score: h.score,
+          byField: h.byField,
+        }))
         .filter((c) => c.record);
     } else {
-      candidates = records.map((r) => ({ record: r, score: 0, byField: new Map() }));
+      candidates = records.map((r) => ({
+        record: r,
+        score: 0,
+        byField: new Map(),
+      }));
     }
 
     const out = [];
@@ -166,12 +192,25 @@ const hncsSearch = (() => {
       const author = (rec.author || "").toLowerCase();
       const recTags = (rec.tags || []).map((t) => t.toLowerCase());
 
-      if (tags.length && !tags.every((q) => recTags.some((t) => t.startsWith(q)))) continue;
-      if (authors.length && !authors.every((q) => author.startsWith(q))) continue;
+      if (
+        tags.length &&
+        !tags.every((q) => recTags.some((t) => t.startsWith(q)))
+      )
+        continue;
+      if (authors.length && !authors.every((q) => author.startsWith(q)))
+        continue;
 
       if (phrases.length) {
-        const noteHay = (rec.notes || []).map((n) => (n.note || "") + "\n" + (n.quote || "")).join("\n");
-        const hay = ((rec.text || "") + "\n" + (rec.threadTitle || "") + "\n" + noteHay).toLowerCase();
+        const noteHay = (rec.notes || [])
+          .map((n) => (n.note || "") + "\n" + (n.quote || ""))
+          .join("\n");
+        const hay = (
+          (rec.text || "") +
+          "\n" +
+          (rec.threadTitle || "") +
+          "\n" +
+          noteHay
+        ).toLowerCase();
         if (!phrases.every((p) => hay.includes(p))) continue;
         c.score += phrases.length * 5;
       }
@@ -179,14 +218,18 @@ const hncsSearch = (() => {
       const byField = {};
       for (const f of FIELDS) byField[f] = [...(c.byField.get(f) || [])];
 
-      out.push({ record: rec, score: c.score, highlight: { byField, phrases } });
+      out.push({
+        record: rec,
+        score: c.score,
+        highlight: { byField, phrases },
+      });
     }
 
     const ranked = hits !== null || phrases.length;
     out.sort((a, b) =>
       ranked
         ? b.score - a.score || b.record.savedAt - a.record.savedAt
-        : b.record.savedAt - a.record.savedAt
+        : b.record.savedAt - a.record.savedAt,
     );
     return out;
   }
