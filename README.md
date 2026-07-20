@@ -8,12 +8,7 @@ https://github.com/user-attachments/assets/2a588aea-24e7-40c6-bdd6-e1c0fe73a655
 
 ## Install
 
-**Temporary (any Firefox):**
-1. Open `about:debugging#/runtime/this-firefox`
-2. Click **Load Temporary Add-on…**
-3. Pick `manifest.json` inside this folder
-
-Temporary add-ons are removed when Firefox closes, but your saved comments are **not** - they live in IndexedDB under the extension's ID and survive reloads of the add-on.
+https://addons.mozilla.org/en-US/firefox/addon/hn-comment-saver/
 
 ## Use
 
