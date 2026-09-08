@@ -44,7 +44,7 @@ Notes are indexed: plain search terms match note text (boosted above body text),
 
 ### Tags
 
-`edit tags` on any saved comment opens an inline editor (comma-separated, Enter saves, Esc cancels). Tags are normalized to lowercase, spaces become `-`.
+`edit tags` on any saved comment opens an inline editor (comma-separated, Enter saves, Esc cancels). As you type, existing tags matching the current prefix are suggested with their usage counts (most-used first, tags already on the comment excluded): ↑/↓ to pick, Tab or Enter to complete, Esc to dismiss. Tags are normalized to lowercase, spaces become `-`.
 
 ### Import / export
 

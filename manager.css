@@ -201,6 +201,36 @@ a:hover {
   font-size: 8pt;
   margin-left: 6px;
 }
+.tag-editor {
+  position: relative;
+}
+.tag-suggest {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  min-width: 180px;
+  max-width: min(360px, 80%);
+  background: #fff;
+  border: 1px solid #828282;
+  font-family: monospace;
+  font-size: 9pt;
+}
+.tag-suggest .s {
+  padding: 2px 5px;
+  color: #828282;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tag-suggest .s.active {
+  background: #f6f6ef;
+  color: #ff6600;
+}
+.tag-suggest .s .n {
+  color: #b6b6af;
+}
 
 /* ---- misc ---- */
 #empty {

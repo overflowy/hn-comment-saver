@@ -359,13 +359,18 @@
     }
   }
 
-  function renderTagbar() {
+  /** All tags in use, as [tag, count] sorted by count desc, then name. */
+  function tagCounts() {
     const counts = new Map();
     for (const rec of all)
       for (const t of rec.tags || []) counts.set(t, (counts.get(t) || 0) + 1);
-    const tags = [...counts.entries()].sort(
+    return [...counts.entries()].sort(
       (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
     );
+  }
+
+  function renderTagbar() {
+    const tags = tagCounts();
 
     tagbarEl.textContent = "";
     if (!tags.length) return;
@@ -549,23 +554,127 @@
     input.placeholder = "comma-separated tags";
     const hint = document.createElement("span");
     hint.className = "hint";
-    hint.textContent = "enter to save · esc to cancel";
-    wrap.append(input, hint);
+    hint.textContent = "enter to save · esc to cancel · tab to complete";
+    const list = document.createElement("div");
+    list.className = "tag-suggest";
+    list.hidden = true;
+    wrap.append(input, hint, list);
     item.insertBefore(wrap, item.querySelector(".commtext"));
     input.focus();
     input.select();
 
-    input.addEventListener("keydown", async (e) => {
-      if (e.key === "Enter") {
-        const tags = await hncsDB.setTags(rec.id, input.value.split(","));
-        rec.tags = tags || [];
-        hncsSearch.upsert(rec);
-        renderInlineTags(tagsSpan, rec);
-        renderTagbar();
-        wrap.remove();
-        toast("tags saved");
+    // ---- autocomplete over the comma-separated segment at the caret ----
+    const MAX_SUGGEST = 8;
+    let suggestions = []; // [tag, count]
+    let active = -1;
+
+    // Bounds of the segment containing the caret, in input.value. Uses the
+    // selection end so a fully selected value (editor just opened) resolves
+    // to the last segment rather than the first.
+    function segmentAt() {
+      const pos = input.selectionEnd;
+      const v = input.value;
+      const start = v.lastIndexOf(",", pos - 1) + 1;
+      const endIdx = v.indexOf(",", pos);
+      const end = endIdx === -1 ? v.length : endIdx;
+      return { start, end, raw: v.slice(start, end) };
+    }
+
+    function otherTags(seg) {
+      const v = input.value;
+      const rest = v.slice(0, seg.start) + "," + v.slice(seg.end);
+      return new Set(hncsDB.normalizeTags(rest.split(",")));
+    }
+
+    function closeSuggest() {
+      suggestions = [];
+      active = -1;
+      list.hidden = true;
+      list.textContent = "";
+    }
+
+    function updateSuggest() {
+      const seg = segmentAt();
+      const prefix = hncsDB.normalizeTags([seg.raw])[0] || "";
+      const taken = otherTags(seg);
+      suggestions = tagCounts()
+        .filter(([t]) => t.startsWith(prefix) && t !== prefix && !taken.has(t))
+        .slice(0, MAX_SUGGEST);
+      if (!suggestions.length) return closeSuggest();
+
+      active = 0;
+      list.textContent = "";
+      suggestions.forEach(([t, n], i) => {
+        const row = document.createElement("div");
+        row.className = "s" + (i === active ? " active" : "");
+        row.append("#" + t, " ");
+        const nEl = document.createElement("span");
+        nEl.className = "n";
+        nEl.textContent = "(" + n + ")";
+        row.appendChild(nEl);
+        // mousedown, not click: click would blur the input first.
+        row.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          accept(i);
+        });
+        row.addEventListener("mousemove", () => setActive(i));
+        list.appendChild(row);
+      });
+      list.hidden = false;
+    }
+
+    function setActive(i) {
+      active = (i + suggestions.length) % suggestions.length;
+      list.querySelectorAll(".s").forEach((el, j) =>
+        el.classList.toggle("active", j === active),
+      );
+    }
+
+    // Replace the caret's segment with the chosen tag and start a new one.
+    function accept(i) {
+      const [tag] = suggestions[i] || [];
+      if (!tag) return;
+      const seg = segmentAt();
+      const before = input.value.slice(0, seg.start).trimEnd();
+      const after = input.value.slice(seg.end).replace(/^\s*,?\s*/, "");
+      const head = (before ? before + " " : "") + tag + ", ";
+      input.value = head + after;
+      input.setSelectionRange(head.length, head.length);
+      closeSuggest();
+    }
+
+    async function save() {
+      const tags = await hncsDB.setTags(rec.id, input.value.split(","));
+      rec.tags = tags || [];
+      hncsSearch.upsert(rec);
+      renderInlineTags(tagsSpan, rec);
+      renderTagbar();
+      wrap.remove();
+      toast("tags saved");
+    }
+
+    input.addEventListener("input", updateSuggest);
+    input.addEventListener("blur", closeSuggest);
+
+    input.addEventListener("keydown", (e) => {
+      const open = !list.hidden;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        open ? setActive(active + 1) : updateSuggest();
+      } else if (e.key === "ArrowUp" && open) {
+        e.preventDefault();
+        setActive(active - 1);
+      } else if (e.key === "Tab" && open) {
+        e.preventDefault();
+        accept(active);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        // Enter completes when a suggestion is highlighted, otherwise saves.
+        open ? accept(active) : save();
       } else if (e.key === "Escape") {
-        wrap.remove();
+        e.preventDefault();
+        // First Esc dismisses the suggestions, second cancels the editor.
+        open ? closeSuggest() : wrap.remove();
       }
     });
   }
