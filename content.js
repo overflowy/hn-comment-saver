@@ -188,13 +188,12 @@
    }
  
    async function init() {
-     const rows = Array.from(document.querySelectorAll("tr.athing.comtr"));
-     // A comment-permalink page: the fatitem row is also a comment but has no
-     // .comtr class; include it if it looks like a comment.
-     const fatRow = document.querySelector(".fatitem tr.athing");
-     if (fatRow && fatRow.querySelector(".commtext") && !rows.includes(fatRow)) {
-       rows.unshift(fatRow);
-     }
+     // Comment rows are tr.athing with a comment body. Item pages add .comtr,
+     // but the permalink fatitem row, /newcomments and /threads do not, so
+     // key on .commtext rather than the class.
+     const rows = Array.from(document.querySelectorAll("tr.athing")).filter(
+       (row) => row.querySelector(".commtext")
+     );
      if (!rows.length) return;
  
      const links = new Map();
