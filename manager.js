@@ -165,6 +165,7 @@
   async function persistNotes(item, rec) {
     rec.notes = (await hncsDB.setNotes(rec.id, rec.notes)) || rec.notes;
     hncsSearch.upsert(rec);
+    scheduleIndexSave();
     await rerenderItem(item, rec);
   }
 
@@ -478,6 +479,7 @@
       if (delA.dataset.armed) {
         await hncsDB.deleteComment(rec.id);
         hncsSearch.remove(rec.id);
+        scheduleIndexSave();
         all = all.filter((r) => r.id !== rec.id);
         item.remove();
         renderTagbar();
@@ -647,6 +649,7 @@
       const tags = await hncsDB.setTags(rec.id, input.value.split(","));
       rec.tags = tags || [];
       hncsSearch.upsert(rec);
+      scheduleIndexSave();
       renderInlineTags(tagsSpan, rec);
       renderTagbar();
       wrap.remove();
@@ -803,9 +806,48 @@
 
   // ---- boot -------------------------------------------------------------------
 
+  // The search index is cached in IndexedDB so a large collection doesn't
+  // re-tokenize everything on every manager open. The cache is reconciled
+  // against the records on load (restore() fixes up any comment saved,
+  // edited or deleted since the snapshot), and re-saved shortly after any
+  // in-manager edit. Failures here only cost a rebuild, never data.
+  let indexSaveT = null;
+  function scheduleIndexSave(delay = 1000) {
+    clearTimeout(indexSaveT);
+    indexSaveT = setTimeout(() => {
+      // Serializing a big index is a few hundred ms of main-thread work;
+      // wait for an idle slot so it never lands on top of a UI update.
+      if (typeof requestIdleCallback === "function")
+        requestIdleCallback(saveIndex, { timeout: 5000 });
+      else saveIndex();
+    }, delay);
+  }
+  async function saveIndex() {
+    if (!hncsSearch.isDirty()) return;
+    const snap = hncsSearch.serialize();
+    if (!snap) return;
+    try {
+      await hncsDB.putSearchIndex(snap);
+    } catch (e) {
+      console.warn("hncs: could not persist search index", e);
+    }
+  }
+
+  async function buildIndex() {
+    let saved = null;
+    try {
+      saved = await hncsDB.getSearchIndex();
+    } catch (e) {
+      /* treat as no cache */
+    }
+    const r = saved && hncsSearch.restore(saved, all);
+    if (!r) hncsSearch.build(all);
+    if (hncsSearch.isDirty()) scheduleIndexSave(0);
+  }
+
   async function load() {
     all = await hncsDB.getAllMeta();
-    hncsSearch.build(all);
+    await buildIndex();
     updateCount();
     await refresh();
   }

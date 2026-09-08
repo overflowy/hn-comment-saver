@@ -25,13 +25,20 @@
  *    tags:      ["focus", "digital-minimalism"],
  *    savedAt:   1783900000000
  *  }
+ *
+ * A second store, "searchIndex", holds one row: the serialized MiniSearch
+ * index (gzip JSON) plus the metadata needed to decide whether it is still
+ * usable. It is a cache: the comments store is the source of truth and the
+ * manager reconciles the loaded index against it (see search.js restore()).
  */
 
 "use strict";
 
 const HNCS_DB_NAME = "hn-comment-saver";
-const HNCS_DB_VERSION = 1;
+const HNCS_DB_VERSION = 2;
 const HNCS_STORE = "comments";
+const HNCS_INDEX_STORE = "searchIndex";
+const HNCS_INDEX_KEY = "main";
 
 const hncsDB = (() => {
   let dbPromise = null;
@@ -49,19 +56,31 @@ const hncsDB = (() => {
           store.createIndex("tags", "tags", { multiEntry: true });
           store.createIndex("author", "author");
         }
+        if (!db.objectStoreNames.contains(HNCS_INDEX_STORE)) {
+          db.createObjectStore(HNCS_INDEX_STORE);
+        }
       };
-      req.onsuccess = () => resolve(req.result);
+      req.onsuccess = () => {
+        const db = req.result;
+        // Another context (background vs manager) is upgrading: get out of
+        // its way and reopen lazily on next use.
+        db.onversionchange = () => {
+          db.close();
+          dbPromise = null;
+        };
+        resolve(db);
+      };
       req.onerror = () => reject(req.error);
     });
     return dbPromise;
   }
 
-  function tx(mode, fn) {
+  function tx(mode, fn, storeName = HNCS_STORE) {
     return open().then(
       (db) =>
         new Promise((resolve, reject) => {
-          const t = db.transaction(HNCS_STORE, mode);
-          const store = t.objectStore(HNCS_STORE);
+          const t = db.transaction(storeName, mode);
+          const store = t.objectStore(storeName);
           const out = fn(store);
           t.oncomplete = () =>
             resolve(out && out.result !== undefined ? out.result : out);
@@ -276,7 +295,45 @@ const hncsDB = (() => {
     return { added, merged, skipped };
   }
 
+  // ---- search index cache ------------------------------------------------------
+
+  /** Persist a serialized search index: { meta: {...}, json: string }. */
+  async function putSearchIndex({ meta, json }) {
+    const gz = await gzip(json);
+    const row = {
+      meta,
+      jsonGz: gz,
+      json: gz ? null : json,
+      savedAt: Date.now(),
+    };
+    await tx("readwrite", (s) => s.put(row, HNCS_INDEX_KEY), HNCS_INDEX_STORE);
+  }
+
+  /** The stored index as { meta, json, savedAt }, or null if none/unreadable. */
+  async function getSearchIndex() {
+    const row = await tx(
+      "readonly",
+      (s) => s.get(HNCS_INDEX_KEY),
+      HNCS_INDEX_STORE,
+    );
+    if (!row) return null;
+    try {
+      const json = row.jsonGz ? await gunzip(row.jsonGz) : row.json;
+      if (typeof json !== "string") return null;
+      return { meta: row.meta, json, savedAt: row.savedAt };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function clearSearchIndex() {
+    await tx("readwrite", (s) => s.delete(HNCS_INDEX_KEY), HNCS_INDEX_STORE);
+  }
+
   return {
+    putSearchIndex,
+    getSearchIndex,
+    clearSearchIndex,
     saveComment,
     getComment,
     getAllMeta,

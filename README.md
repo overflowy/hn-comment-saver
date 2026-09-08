@@ -55,7 +55,8 @@ Notes are indexed: plain search terms match note text (boosted above body text),
 
 - **IndexedDB**, not `storage.local` - binary-capable, indexed, no JSON re-stringify of the whole dataset on every write.
 - The comment **HTML is gzip-compressed** (`CompressionStream`) at save time and stored as an `ArrayBuffer` (typically 3–5× smaller). It is only decompressed when rendered or exported.
-- A **plain-text copy stays uncompressed** - it's small and it's what gets indexed, so searching never touches the compressed blobs. The MiniSearch inverted index is built in memory when the manager opens and kept in sync on save/delete/tag edits.
+- A **plain-text copy stays uncompressed** - it's small and it's what gets indexed, so searching never touches the compressed blobs. The MiniSearch inverted index lives in memory and is kept in sync on save/delete/tag edits.
+- The **index is cached in IndexedDB** (gzip JSON in a second object store) so opening the manager doesn't re-tokenize the whole collection. The cache is never trusted blindly: every indexed document stores a fingerprint of exactly the content that was indexed, and on load the manager reconciles the cached index against the records, adding, re-indexing or discarding whatever changed since the snapshot (including comments saved or unsaved from HN while the manager was closed). Any unusable snapshot just falls back to a full rebuild. The snapshot is refreshed in idle time after edits.
 - Indexes on `savedAt`, `threadId`, `author`, and `tags` (multiEntry).
 
 ## Auto-backups
