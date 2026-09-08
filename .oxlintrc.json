@@ -17,19 +17,12 @@
   },
   "rules": {
     "no-console": ["warn", { "allow": ["info", "warn", "error"] }],
-    "no-unused-vars": [
-      "error",
-      { "varsIgnorePattern": "^hncs(DB|Search)$" }
-    ],
+    "no-unused-vars": ["error", { "varsIgnorePattern": "^hncs(DB|Search)$" }],
     "no-debugger": "error",
     "eqeqeq": "error",
     "no-await-in-loop": "off",
     "unicorn/consistent-function-scoping": "off",
     "unicorn/prefer-add-event-listener": "off"
   },
-  "ignorePatterns": [
-    "dist/**",
-    "vendor/**",
-    "node_modules/**"
-  ]
+  "ignorePatterns": ["dist/**", "vendor/**", "node_modules/**"]
 }

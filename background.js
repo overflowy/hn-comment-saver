@@ -43,8 +43,7 @@ async function ensureAlarm() {
   const existing = await api.alarms.get(BACKUP_ALARM);
   // Firefox does not persist alarms across restarts, so this runs on every
   // background start. First tick soon after start, then hourly.
-  if (!existing)
-    api.alarms.create(BACKUP_ALARM, { delayInMinutes: 1, periodInMinutes: 60 });
+  if (!existing) api.alarms.create(BACKUP_ALARM, { delayInMinutes: 1, periodInMinutes: 60 });
 }
 
 function backupDue(s) {
@@ -118,10 +117,7 @@ async function runBackup(slot) {
 api.downloads.onChanged.addListener((delta) => {
   const url = pendingRevoke.get(delta.id);
   if (!url || !delta.state) return;
-  if (
-    delta.state.current === "complete" ||
-    delta.state.current === "interrupted"
-  ) {
+  if (delta.state.current === "complete" || delta.state.current === "interrupted") {
     URL.revokeObjectURL(url);
     pendingRevoke.delete(delta.id);
   }

@@ -82,8 +82,7 @@ const hncsDB = (() => {
           const t = db.transaction(storeName, mode);
           const store = t.objectStore(storeName);
           const out = fn(store);
-          t.oncomplete = () =>
-            resolve(out && out.result !== undefined ? out.result : out);
+          t.oncomplete = () => resolve(out && out.result !== undefined ? out.result : out);
           t.onerror = () => reject(t.error);
           t.onabort = () => reject(t.error);
         }),
@@ -93,21 +92,16 @@ const hncsDB = (() => {
   // ---- compression helpers -------------------------------------------------
 
   const canCompress =
-    typeof CompressionStream !== "undefined" &&
-    typeof DecompressionStream !== "undefined";
+    typeof CompressionStream !== "undefined" && typeof DecompressionStream !== "undefined";
 
   async function gzip(str) {
     if (!canCompress) return null;
-    const stream = new Blob([str])
-      .stream()
-      .pipeThrough(new CompressionStream("gzip"));
+    const stream = new Blob([str]).stream().pipeThrough(new CompressionStream("gzip"));
     return await new Response(stream).arrayBuffer();
   }
 
   async function gunzip(buf) {
-    const stream = new Blob([buf])
-      .stream()
-      .pipeThrough(new DecompressionStream("gzip"));
+    const stream = new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"));
     return await new Response(stream).text();
   }
 
@@ -279,14 +273,11 @@ const hncsDB = (() => {
         threadTitle: raw.threadTitle || "",
         threadUrl: raw.threadUrl || "",
         commentUrl:
-          raw.commentUrl ||
-          (raw.id ? "https://news.ycombinator.com/item?id=" + raw.id : ""),
+          raw.commentUrl || (raw.id ? "https://news.ycombinator.com/item?id=" + raw.id : ""),
         parentId: raw.parentId || null,
         tags: normalizeTags(raw.tags),
         notes: Array.isArray(raw.notes)
-          ? raw.notes.filter(
-              (n) => n && n.id && n.quote !== undefined && n.quote !== null,
-            )
+          ? raw.notes.filter((n) => n && n.id && n.quote !== undefined && n.quote !== null)
           : [],
         savedAt: raw.savedAt || Date.now(),
       });
@@ -313,11 +304,7 @@ const hncsDB = (() => {
 
   /** The stored index as { meta, json, savedAt }, or null if none/unreadable. */
   async function getSearchIndex() {
-    const row = await tx(
-      "readonly",
-      (s) => s.get(HNCS_INDEX_KEY),
-      HNCS_INDEX_STORE,
-    );
+    const row = await tx("readonly", (s) => s.get(HNCS_INDEX_KEY), HNCS_INDEX_STORE);
     if (!row) return null;
     try {
       const json = row.jsonGz ? await gunzip(row.jsonGz) : row.json;

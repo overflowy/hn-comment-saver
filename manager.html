@@ -16,15 +16,9 @@
           <td id="brand">
             <b>Saved Comments</b>
             <span class="topnav">
-              <a href="#" id="btn-export">export</a> |
-              <a href="#" id="btn-import">import</a> |
+              <a href="#" id="btn-export">export</a> | <a href="#" id="btn-import">import</a> |
               <a href="#" id="btn-backups">backups</a> |
-              <a
-                href="https://news.ycombinator.com"
-                target="_blank"
-                rel="noopener"
-                >hacker news</a
-              >
+              <a href="https://news.ycombinator.com" target="_blank" rel="noopener">hacker news</a>
             </span>
           </td>
           <td id="count"><span id="stat-count">0</span> saved</td>
@@ -49,8 +43,8 @@
             <tr>
               <td><code>words</code></td>
               <td>
-                match anywhere (comment, title, author, tags, notes) — prefixes
-                and small typos count
+                match anywhere (comment, title, author, tags, notes) — prefixes and small typos
+                count
               </td>
             </tr>
             <tr>
@@ -86,11 +80,9 @@
         <div id="backup-panel" hidden>
           <div>
             <b>auto-backup</b> — daily, only when something changed, written to
-            <code>Downloads/hn-comment-saver/</code> as weekday slots (<code
-              >backup-mon.json</code
-            >
-            … <code>backup-sun.json</code>, each overwritten a week later).
-            Restore any of them with the import button.
+            <code>Downloads/hn-comment-saver/</code> as weekday slots (<code>backup-mon.json</code>
+            … <code>backup-sun.json</code>, each overwritten a week later). Restore any of them with
+            the import button.
           </div>
           <div id="backup-status">…</div>
           <div class="backup-ops">
@@ -110,23 +102,16 @@
         <p><b>Nothing saved yet.</b></p>
         <p>
           Browse
-          <a href="https://news.ycombinator.com" target="_blank" rel="noopener"
-            >Hacker News</a
-          >
-          and click the new <span class="fake-link">save</span> link in any
-          comment's header. Comments show up here, searchable and taggable.
+          <a href="https://news.ycombinator.com" target="_blank" rel="noopener">Hacker News</a>
+          and click the new <span class="fake-link">save</span> link in any comment's header.
+          Comments show up here, searchable and taggable.
         </p>
       </div>
 
       <div id="footer"><span class="yc-line"></span></div>
     </div>
 
-    <input
-      type="file"
-      id="import-file"
-      accept=".json,application/json"
-      hidden
-    />
+    <input type="file" id="import-file" accept=".json,application/json" hidden />
 
     <script src="db.js"></script>
     <script src="vendor/minisearch.min.js"></script>

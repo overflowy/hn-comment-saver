@@ -25,10 +25,7 @@
       for (const attr of Array.from(el.attributes)) {
         const name = attr.name.toLowerCase();
         if (name.startsWith("on")) el.removeAttribute(attr.name);
-        if (
-          (name === "href" || name === "src") &&
-          /^\s*javascript:/i.test(attr.value)
-        ) {
+        if ((name === "href" || name === "src") && /^\s*javascript:/i.test(attr.value)) {
           el.removeAttribute(attr.name);
         }
       }
@@ -73,8 +70,7 @@
       let m;
       re.lastIndex = 0;
       while ((m = re.exec(str))) {
-        if (m.index > last)
-          frag.appendChild(document.createTextNode(str.slice(last, m.index)));
+        if (m.index > last) frag.appendChild(document.createTextNode(str.slice(last, m.index)));
         const mark = document.createElement("mark");
         mark.className = "hl";
         mark.textContent = m[0];
@@ -82,8 +78,7 @@
         last = m.index + m[0].length;
         if (m[0].length === 0) re.lastIndex++; // safety against zero-width loops
       }
-      if (last < str.length)
-        frag.appendChild(document.createTextNode(str.slice(last)));
+      if (last < str.length) frag.appendChild(document.createTextNode(str.slice(last)));
       node.parentNode.replaceChild(frag, node);
     }
   }
@@ -99,16 +94,12 @@
   function resolveAnchor(bodyText, note) {
     const q = note.quote || "";
     if (!q) return null;
-    if (
-      Number.isInteger(note.start) &&
-      bodyText.substr(note.start, q.length) === q
-    ) {
+    if (Number.isInteger(note.start) && bodyText.substr(note.start, q.length) === q) {
       return [note.start, note.start + q.length];
     }
     if (note.prefix) {
       const i = bodyText.indexOf(note.prefix + q);
-      if (i !== -1)
-        return [i + note.prefix.length, i + note.prefix.length + q.length];
+      if (i !== -1) return [i + note.prefix.length, i + note.prefix.length + q.length];
     }
     const i = bodyText.indexOf(q);
     if (i !== -1) return [i, i + q.length];
@@ -195,8 +186,7 @@
       const quote = document.createElement("span");
       quote.className = "note-quote";
       const q = note.quote || "";
-      quote.textContent =
-        "\u201C" + (q.length > 90 ? q.slice(0, 90) + "\u2026" : q) + "\u201D";
+      quote.textContent = "\u201C" + (q.length > 90 ? q.slice(0, 90) + "\u2026" : q) + "\u201D";
       quote.title = q;
 
       const text = document.createElement("span");
@@ -363,11 +353,8 @@
   /** All tags in use, as [tag, count] sorted by count desc, then name. */
   function tagCounts() {
     const counts = new Map();
-    for (const rec of all)
-      for (const t of rec.tags || []) counts.set(t, (counts.get(t) || 0) + 1);
-    return [...counts.entries()].toSorted(
-      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
-    );
+    for (const rec of all) for (const t of rec.tags || []) counts.set(t, (counts.get(t) || 0) + 1);
+    return [...counts.entries()].toSorted((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   }
 
   function renderTagbar() {
@@ -433,29 +420,21 @@
 
     const user = comheadLink(
       rec.author || "unknown",
-      "https://news.ycombinator.com/user?id=" +
-        encodeURIComponent(rec.author || ""),
+      "https://news.ycombinator.com/user?id=" + encodeURIComponent(rec.author || ""),
     );
     user.className = "hnuser";
     head.appendChild(user);
     head.append(" ");
 
-    head.appendChild(
-      comheadLink(rec.ageText || fmtDate(rec.savedAt), rec.commentUrl),
-    );
+    head.appendChild(comheadLink(rec.ageText || fmtDate(rec.savedAt), rec.commentUrl));
     if (rec.parentId) {
       head.append(" | ");
       head.appendChild(
-        comheadLink(
-          "parent",
-          "https://news.ycombinator.com/item?id=" + rec.parentId,
-        ),
+        comheadLink("parent", "https://news.ycombinator.com/item?id=" + rec.parentId),
       );
     }
     head.append(" | on: ");
-    head.appendChild(
-      comheadLink(rec.threadTitle || "(thread)", rec.threadUrl, "storyline"),
-    );
+    head.appendChild(comheadLink(rec.threadTitle || "(thread)", rec.threadUrl, "storyline"));
     head.append(" | saved " + fmtDate(rec.savedAt) + " | ");
 
     // tags inline
@@ -628,9 +607,7 @@
 
     function setActive(i) {
       active = (i + suggestions.length) % suggestions.length;
-      list.querySelectorAll(".s").forEach((el, j) =>
-        el.classList.toggle("active", j === active),
-      );
+      list.querySelectorAll(".s").forEach((el, j) => el.classList.toggle("active", j === active));
     }
 
     // Replace the caret's segment with the chosen tag and start a new one.
@@ -695,13 +672,9 @@
 
     let results;
     if (q.trim()) {
-      results = hncsSearch
-        .search(q, all)
-        .map((r) => ({ record: r.record, hl: r.highlight }));
+      results = hncsSearch.search(q, all).map((r) => ({ record: r.record, hl: r.highlight }));
     } else {
-      results = all
-        .toSorted((a, b) => b.savedAt - a.savedAt)
-        .map((r) => ({ record: r, hl: null }));
+      results = all.toSorted((a, b) => b.savedAt - a.savedAt).map((r) => ({ record: r, hl: null }));
     }
     if (activeTags.size) {
       results = results.filter((r) =>
@@ -760,8 +733,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download =
-      "hn-saved-comments-" + new Date().toISOString().slice(0, 10) + ".json";
+    a.download = "hn-saved-comments-" + new Date().toISOString().slice(0, 10) + ".json";
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -784,9 +756,7 @@
       if (!Array.isArray(records)) throw new Error("no comments array found");
       const res = await hncsDB.importAll(records);
       await load();
-      toast(
-        `imported: ${res.added} new, ${res.merged} tag-merged, ${res.skipped} skipped`,
-      );
+      toast(`imported: ${res.added} new, ${res.merged} tag-merged, ${res.skipped} skipped`);
     } catch (err) {
       toast("import failed: " + err.message);
     }
@@ -891,8 +861,7 @@
     new Promise((resolve) => {
       try {
         const p = api.runtime.sendMessage(msg, (r) => resolve(r));
-        if (p && typeof p.then === "function")
-          p.then(resolve).catch(() => resolve(null));
+        if (p && typeof p.then === "function") p.then(resolve).catch(() => resolve(null));
       } catch {
         resolve(null);
       }
@@ -955,8 +924,7 @@
     if (r && r.ok) {
       await refreshStatus();
     } else {
-      statusEl.textContent =
-        "backup failed: " + ((r && r.error) || "unknown error");
+      statusEl.textContent = "backup failed: " + ((r && r.error) || "unknown error");
       statusEl.className = "err";
     }
   });
