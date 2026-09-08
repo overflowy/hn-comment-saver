@@ -134,7 +134,7 @@
          // Firefox returns a promise; Chrome uses the callback.
          if (p && typeof p.then === "function")
            p.then(resolve).catch(() => resolve(null));
-       } catch (e) {
+       } catch {
          resolve(null);
        }
      });

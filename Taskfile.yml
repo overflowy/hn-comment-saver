@@ -12,5 +12,10 @@ tasks:
     desc: Package the extension
     cmds:
       - mkdir -p dist
-      - zip -r dist/hn-comment-saver.zip * -x "*.DS_Store" -x ".git/*" -x ".gitignore"
+      - zip -r dist/hn-comment-saver.zip * -x "*.DS_Store" -x ".git/*" -x ".gitignore" -x "node_modules/*" -x "package.json" -x "bun.lock" -x "dist/*"
       - echo "Extension packaged to dist/hn-comment-saver.zip"
+
+  lint:
+    desc: Lint the source with oxlint
+    cmds:
+      - bun run lint

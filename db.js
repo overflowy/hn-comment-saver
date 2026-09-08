@@ -119,7 +119,7 @@ const hncsDB = (() => {
       if (!api?.storage?.local) return;
       const got = await api.storage.local.get("hncsRev");
       await api.storage.local.set({ hncsRev: (got.hncsRev || 0) + 1 });
-    } catch (e) {
+    } catch {
       /* non-fatal */
     }
   }
@@ -168,7 +168,7 @@ const hncsDB = (() => {
     if (rec.htmlGz) {
       try {
         rec.html = await gunzip(rec.htmlGz);
-      } catch (e) {
+      } catch {
         rec.html = rec.text || "";
       }
     }
@@ -255,7 +255,7 @@ const hncsDB = (() => {
         const curNotes = Array.isArray(cur.notes) ? cur.notes : [];
         const seen = new Set(curNotes.map((n) => n && n.id));
         const newNotes = (Array.isArray(raw.notes) ? raw.notes : []).filter(
-          (n) => n && n.id && n.quote != null && !seen.has(n.id),
+          (n) => n && n.id && n.quote !== undefined && n.quote !== null && !seen.has(n.id),
         );
         const tagsChanged = union.length !== (cur.tags || []).length;
         if (tagsChanged || newNotes.length) {
@@ -284,7 +284,9 @@ const hncsDB = (() => {
         parentId: raw.parentId || null,
         tags: normalizeTags(raw.tags),
         notes: Array.isArray(raw.notes)
-          ? raw.notes.filter((n) => n && n.id && n.quote != null)
+          ? raw.notes.filter(
+              (n) => n && n.id && n.quote !== undefined && n.quote !== null,
+            )
           : [],
         savedAt: raw.savedAt || Date.now(),
       });
@@ -321,7 +323,7 @@ const hncsDB = (() => {
       const json = row.jsonGz ? await gunzip(row.jsonGz) : row.json;
       if (typeof json !== "string") return null;
       return { meta: row.meta, json, savedAt: row.savedAt };
-    } catch (e) {
+    } catch {
       return null;
     }
   }

@@ -6,7 +6,7 @@ const api = globalThis.browser ?? globalThis.chrome;
 // Ask Firefox to mark our storage non-evictable (belt & suspenders for IndexedDB).
 try {
   navigator.storage?.persist?.();
-} catch (e) {
+} catch {
   /* non-fatal */
 }
 
@@ -64,7 +64,7 @@ function maybeBackup(reason) {
       const s = await getBackupState();
       if (!backupDue(s)) return;
       const r = await runBackup(null);
-      if (r.ok) console.log(`hncs: auto-backup (${reason}) -> ${r.file}`);
+      if (r.ok) console.info(`hncs: auto-backup (${reason}) -> ${r.file}`);
       else console.error(`hncs: auto-backup (${reason}) failed: ${r.error}`);
     } catch (e) {
       console.error("hncs: auto-backup check failed", e);

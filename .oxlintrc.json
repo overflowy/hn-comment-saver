@@ -1,0 +1,35 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "env": {
+    "es2022": true,
+    "browser": true,
+    "webextensions": true
+  },
+  "globals": {
+    "hncsDB": "readonly",
+    "hncsSearch": "readonly",
+    "MiniSearch": "readonly"
+  },
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "rules": {
+    "no-console": ["warn", { "allow": ["info", "warn", "error"] }],
+    "no-unused-vars": [
+      "error",
+      { "varsIgnorePattern": "^hncs(DB|Search)$" }
+    ],
+    "no-debugger": "error",
+    "eqeqeq": "error",
+    "no-await-in-loop": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "unicorn/prefer-add-event-listener": "off"
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "vendor/**",
+    "node_modules/**"
+  ]
+}

@@ -22,7 +22,7 @@
       .querySelectorAll("script, style, iframe, object, embed, link, meta")
       .forEach((n) => n.remove());
     for (const el of doc.body.querySelectorAll("*")) {
-      for (const attr of [...el.attributes]) {
+      for (const attr of Array.from(el.attributes)) {
         const name = attr.name.toLowerCase();
         if (name.startsWith("on")) el.removeAttribute(attr.name);
         if (
@@ -170,7 +170,7 @@
   }
 
   async function rerenderItem(item, rec) {
-    const fresh = await renderItem(rec, item._hl);
+    const fresh = await renderItem(rec, item.hncsHl);
     if (item.classList.contains("collapsed")) {
       fresh.classList.add("collapsed");
       const t = fresh.querySelector(".toggle");
@@ -365,7 +365,7 @@
     const counts = new Map();
     for (const rec of all)
       for (const t of rec.tags || []) counts.set(t, (counts.get(t) || 0) + 1);
-    return [...counts.entries()].sort(
+    return [...counts.entries()].toSorted(
       (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
     );
   }
@@ -391,7 +391,8 @@
       a.appendChild(nEl);
       a.addEventListener("click", (e) => {
         e.preventDefault();
-        activeTags.has(tag) ? activeTags.delete(tag) : activeTags.add(tag);
+        if (activeTags.has(tag)) activeTags.delete(tag);
+        else activeTags.add(tag);
         refresh();
       });
       tagbarEl.appendChild(a);
@@ -507,7 +508,7 @@
     const clean = sanitize(full.html || full.text || "");
     while (clean.firstChild) body.appendChild(clean.firstChild);
 
-    item._hl = hl || null;
+    item.hncsHl = hl || null;
     applyAnnotations(body, rec, item);
     renderNotes(item, rec);
 
@@ -663,7 +664,8 @@
       const open = !list.hidden;
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        open ? setActive(active + 1) : updateSuggest();
+        if (open) setActive(active + 1);
+        else updateSuggest();
       } else if (e.key === "ArrowUp" && open) {
         e.preventDefault();
         setActive(active - 1);
@@ -673,11 +675,13 @@
       } else if (e.key === "Enter") {
         e.preventDefault();
         // Enter completes when a suggestion is highlighted, otherwise saves.
-        open ? accept(active) : save();
+        if (open) accept(active);
+        else save();
       } else if (e.key === "Escape") {
         e.preventDefault();
         // First Esc dismisses the suggestions, second cancels the editor.
-        open ? closeSuggest() : wrap.remove();
+        if (open) closeSuggest();
+        else wrap.remove();
       }
     });
   }
@@ -695,8 +699,8 @@
         .search(q, all)
         .map((r) => ({ record: r.record, hl: r.highlight }));
     } else {
-      results = [...all]
-        .sort((a, b) => b.savedAt - a.savedAt)
+      results = all
+        .toSorted((a, b) => b.savedAt - a.savedAt)
         .map((r) => ({ record: r, hl: null }));
     }
     if (activeTags.size) {
@@ -837,7 +841,7 @@
     let saved = null;
     try {
       saved = await hncsDB.getSearchIndex();
-    } catch (e) {
+    } catch {
       /* treat as no cache */
     }
     const r = saved && hncsSearch.restore(saved, all);
