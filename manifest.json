@@ -37,6 +37,6 @@
       "run_at": "document_idle"
     }
   ],
-  "permissions": ["downloads", "alarms", "storage"],
+  "permissions": ["downloads", "alarms", "storage", "scripting"],
   "host_permissions": ["*://news.ycombinator.com/*"]
 }

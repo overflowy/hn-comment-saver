@@ -471,3 +471,20 @@ mark.note mark.hl {
 .backup-ops a {
   color: #ff6600;
 }
+
+/* ---- host permission banner ---- */
+#perm-banner {
+  margin: 8px 4px 0 4px;
+  padding: 6px 10px;
+  max-width: 640px;
+  background: #fff4e5;
+  border: 1px solid #ff6600;
+  font-size: 9pt;
+  color: #333;
+  line-height: 1.6;
+}
+#perm-banner a {
+  color: #ff6600;
+  font-weight: bold;
+  margin-left: 6px;
+}

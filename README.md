@@ -10,6 +10,8 @@ https://github.com/user-attachments/assets/2a588aea-24e7-40c6-bdd6-e1c0fe73a655
 
 https://addons.mozilla.org/en-US/firefox/addon/hn-comment-saver/
 
+Firefox treats the extension's access to `news.ycombinator.com` as an optional permission. Without it, no **save** links appear and nothing is injected. The extension asks for it on the first toolbar click and the manager shows a **grant access** banner while it's missing; you can also toggle it under `about:addons` → HN Comment Saver → Permissions.
+
 ## Use
 
 - On any HN page (threads, item pages, comment permalinks, `/threads`, `/newcomments`), every comment header gets a **save** link. Click to save; it turns into **saved ✓** (click again to unsave). Already-saved comments are marked when the page loads.

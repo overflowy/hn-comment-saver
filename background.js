@@ -135,18 +135,68 @@ api.runtime.onStartup.addListener(() => {
   ensureAlarm();
   maybeBackup("startup");
 });
-api.runtime.onInstalled.addListener(() => {
+api.runtime.onInstalled.addListener(async (details) => {
   ensureAlarm();
   maybeBackup("installed");
+  // First install without HN access: open the manager so its banner asks.
+  if (details.reason === "install" && !(await hasHostPermission())) openManager();
 });
 ensureAlarm();
 maybeBackup("wake");
 
+// ---- host permission -----------------------------------------------------------
+//
+// In MV3 Firefox treats host_permissions as optional: the user can decline
+// them at install or switch them off later, and then the content script is
+// simply never injected, with no error anywhere. The manifest cannot make
+// the permission required, so the extension asks for it itself: on every
+// toolbar click (a no-op when already granted), from a banner in the
+// manager, and by opening the manager on first install if it is missing.
+
+const HN_ORIGINS = { origins: ["*://news.ycombinator.com/*"] };
+
+function hasHostPermission() {
+  return api.permissions.contains(HN_ORIGINS);
+}
+
+// Once access is granted, tabs that were already open on HN got no content
+// script; inject it so the user doesn't have to reload them.
+async function injectIntoOpenTabs() {
+  let tabs = [];
+  try {
+    tabs = await api.tabs.query({ url: HN_ORIGINS.origins });
+  } catch {
+    return;
+  }
+  for (const tab of tabs) {
+    try {
+      await api.scripting.insertCSS({ target: { tabId: tab.id }, files: ["content.css"] });
+      await api.scripting.executeScript({ target: { tabId: tab.id }, files: ["content.js"] });
+    } catch {
+      /* discarded tab, about: page, etc. */
+    }
+  }
+}
+
+api.permissions.onAdded.addListener((p) => {
+  if (p.origins && p.origins.length) injectIntoOpenTabs();
+});
+
+function openManager() {
+  api.tabs.create({ url: api.runtime.getURL("manager.html") });
+}
+
 // ---- toolbar / messages --------------------------------------------------------
 
-// Toolbar button opens the manager page.
+// Toolbar button: make sure we can run on HN, then open the manager.
+// permissions.request must run directly inside the user-input handler (no
+// await before it) or Firefox rejects it; it resolves true without a prompt
+// when the permission is already granted.
 api.action.onClicked.addListener(() => {
-  api.tabs.create({ url: api.runtime.getURL("manager.html") });
+  api.permissions
+    .request(HN_ORIGINS)
+    .catch(() => false)
+    .finally(openManager);
 });
 
 api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -172,8 +222,12 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           break;
         }
         case "openManager": {
-          api.tabs.create({ url: api.runtime.getURL("manager.html") });
+          openManager();
           sendResponse({ ok: true });
+          break;
+        }
+        case "hostPermission": {
+          sendResponse({ ok: true, granted: await hasHostPermission() });
           break;
         }
         case "backupStatus": {

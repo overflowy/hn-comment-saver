@@ -934,3 +934,36 @@
     navigator.storage?.persist?.();
   } catch {}
 })();
+
+/* ---- host permission banner (appended) ---- */
+(() => {
+  const api = globalThis.browser ?? globalThis.chrome;
+  const banner = document.querySelector("#perm-banner");
+  const grant = document.querySelector("#perm-grant");
+  if (!banner || !grant || !api?.permissions) return;
+
+  const HN_ORIGINS = { origins: ["*://news.ycombinator.com/*"] };
+
+  async function refresh() {
+    try {
+      banner.hidden = await api.permissions.contains(HN_ORIGINS);
+    } catch {
+      banner.hidden = true;
+    }
+  }
+
+  // permissions.request must be called synchronously inside the click
+  // handler; the background re-injects the content script into open HN tabs
+  // via permissions.onAdded.
+  grant.addEventListener("click", (e) => {
+    e.preventDefault();
+    api.permissions
+      .request(HN_ORIGINS)
+      .catch(() => false)
+      .then(refresh);
+  });
+
+  api.permissions.onAdded?.addListener(refresh);
+  api.permissions.onRemoved?.addListener(refresh);
+  refresh();
+})();
