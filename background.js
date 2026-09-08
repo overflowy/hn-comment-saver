@@ -25,6 +25,7 @@ const BACKUP_ALARM = "hncs-backup-check";
 const BACKUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const DAY_SLOTS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 const pendingRevoke = new Map(); // download id -> blob URL
+let backupInFlight = null; // serializes overlapping checks
 
 async function getBackupState() {
   const d = await api.storage.local.get({
@@ -40,15 +41,38 @@ async function getBackupState() {
 
 async function ensureAlarm() {
   const existing = await api.alarms.get(BACKUP_ALARM);
-  if (!existing) api.alarms.create(BACKUP_ALARM, { periodInMinutes: 60 });
+  // Firefox does not persist alarms across restarts, so this runs on every
+  // background start. First tick soon after start, then hourly.
+  if (!existing)
+    api.alarms.create(BACKUP_ALARM, { delayInMinutes: 1, periodInMinutes: 60 });
 }
 
-async function maybeBackup() {
-  const s = await getBackupState();
-  if (!s.backupEnabled) return;
-  if (Date.now() - s.lastBackupAt < BACKUP_INTERVAL_MS) return;
-  if (s.hncsRev === s.lastBackupRev) return; // nothing changed since last backup
-  await runBackup(null);
+function backupDue(s) {
+  if (!s.backupEnabled) return false;
+  if (Date.now() - s.lastBackupAt < BACKUP_INTERVAL_MS) return false;
+  if (s.hncsRev === s.lastBackupRev) return false; // nothing changed
+  return true;
+}
+
+/** Cheap check (one storage.local read); runs a backup only when due.
+ *  Called from the alarm, on background start, and after every write so a
+ *  backup happens whenever the user is actually active, not just on a timer. */
+function maybeBackup(reason) {
+  if (backupInFlight) return backupInFlight;
+  backupInFlight = (async () => {
+    try {
+      const s = await getBackupState();
+      if (!backupDue(s)) return;
+      const r = await runBackup(null);
+      if (r.ok) console.log(`hncs: auto-backup (${reason}) -> ${r.file}`);
+      else console.error(`hncs: auto-backup (${reason}) failed: ${r.error}`);
+    } catch (e) {
+      console.error("hncs: auto-backup check failed", e);
+    } finally {
+      backupInFlight = null;
+    }
+  })();
+  return backupInFlight;
 }
 
 /** slot: explicit name ("backup-manual") or null for today's weekday slot. */
@@ -104,12 +128,23 @@ api.downloads.onChanged.addListener((delta) => {
 });
 
 api.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === BACKUP_ALARM) maybeBackup();
+  if (alarm.name === BACKUP_ALARM) maybeBackup("alarm");
 });
 
 // Every event-page wake: make sure the alarm exists, catch up if overdue.
+// Alarms don't fire while the browser is closed, so these are the catch-up
+// paths for closed-laptop days: explicit startup/install hooks plus the
+// top-level run (Firefox re-executes this file on every wake).
+api.runtime.onStartup.addListener(() => {
+  ensureAlarm();
+  maybeBackup("startup");
+});
+api.runtime.onInstalled.addListener(() => {
+  ensureAlarm();
+  maybeBackup("installed");
+});
 ensureAlarm();
-maybeBackup();
+maybeBackup("wake");
 
 // ---- toolbar / messages --------------------------------------------------------
 
@@ -125,11 +160,13 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         case "save": {
           const id = await hncsDB.saveComment(msg.record);
           sendResponse({ ok: true, id });
+          maybeBackup("save");
           break;
         }
         case "unsave": {
           await hncsDB.deleteComment(msg.id);
           sendResponse({ ok: true });
+          maybeBackup("unsave");
           break;
         }
         case "checkSaved": {
@@ -144,6 +181,9 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           break;
         }
         case "backupStatus": {
+          // The manager asking for status is a user-active moment: catch up
+          // first so the status reflects an overdue backup having just run.
+          await maybeBackup("manager");
           const s = await getBackupState();
           sendResponse({
             ok: true,
@@ -157,7 +197,7 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         }
         case "backupToggle": {
           await api.storage.local.set({ backupEnabled: !!msg.enabled });
-          if (msg.enabled) maybeBackup(); // may be overdue
+          if (msg.enabled) await maybeBackup("enabled"); // may be overdue
           sendResponse({ ok: true, enabled: !!msg.enabled });
           break;
         }
