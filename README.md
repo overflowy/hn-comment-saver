@@ -4,16 +4,11 @@ A self-contained Firefox extension that saves Hacker News comments locally, lets
 
 <img width="2904" height="1592" alt="ext" src="https://github.com/user-attachments/assets/eaf83f61-cb98-4130-b5fa-e670bcaf3a3b" />
 
-https://github.com/user-attachments/assets/d2bfba2f-13f0-4c47-84d8-9660dcff4641
+https://github.com/user-attachments/assets/2a588aea-24e7-40c6-bdd6-e1c0fe73a655
 
 ## Install
 
-**Temporary (any Firefox):**
-1. Open `about:debugging#/runtime/this-firefox`
-2. Click **Load Temporary Add-on…**
-3. Pick `manifest.json` inside this folder
-
-Temporary add-ons are removed when Firefox closes, but your saved comments are **not** - they live in IndexedDB under the extension's ID and survive reloads of the add-on.
+https://addons.mozilla.org/en-US/firefox/addon/hn-comment-saver/
 
 ## Use
 
